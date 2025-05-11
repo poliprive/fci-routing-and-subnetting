@@ -8,4 +8,4 @@ python3 subnetting.py # per gli esercizi di partizionamento di una rete in tante
 
 # Credits
 - @MatteoBertini - tutta la logica dei due programmi e lo styling dell'output
-- @SolarCTP - input facilitato in formato CSV con file `dati.py`
+- @SolarCTP (George) - input facilitato in formato CSV con file `dati.py`
