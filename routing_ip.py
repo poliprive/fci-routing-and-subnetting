@@ -199,22 +199,30 @@ class Router:
         # Se il NET ID = 0 
         if (IP_functions.apply_netmask(dest_ip, interfaccia_di_ingresso.netmask) == 0) and (dest_ip & (~interfaccia_di_ingresso.netmask & 0xFFFFFFFF) != 0):
             #Se l'host id del pacchetto è uguale all'host id della rete di provenienza allora passa ai livelli superiori se no inoltro diretto
-            print(dest_ip & (~interfaccia_di_ingresso.netmask & 0xFFFFFFFF))
-            print(interfaccia_di_ingresso.ip & (~interfaccia_di_ingresso.netmask & 0xFFFFFFFF))
             if (dest_ip & (~interfaccia_di_ingresso.netmask & 0xFFFFFFFF)) == (interfaccia_di_ingresso.ip & (~interfaccia_di_ingresso.netmask & 0xFFFFFFFF)):
                 print(f"{self.GREEN}Il pacchetto è di unicast limitato, ma l'indirizzo di host coincite con l'interfaccia del router e quindi viene passato ai livlli superiori{self.RESET}")
                 self.results.append((packet.identifier,False, None, None, "Passato ai livelli superiori"))
                 return
-            else:           
-                print(f"{self.GREEN}Il pacchetto è di unicast limitato. Viene inoltrato direttamente sull'intrefaccia di provenienza{self.RESET}")
-                self.results.append((packet.identifier,True, None, interfaccia_di_ingresso.name, "Unicast limitato"))
-                return
+            else:
+                if packet.TTL > 0:
+                    if packet.length > interfaccia_di_ingresso.mtu and packet.dont_fragment:
+                        print(f"{self.GREEN}Il pacchetto è di unicast limitato. Dovrebbe venire inoltrato ma viene scartato: DF attivo e dimensione {packet.length}B > MTU ({interfaccia_di_ingresso.mtu}B){self.RESET}")
+                        self.results.append((packet.identifier,False, None, None, "Pacchetto scartato"))
+                        return
+                    else:
+                        print(f"{self.GREEN}Il pacchetto è di unicast limitato. Viene inoltrato direttamente sull'intrefaccia di provenienza{self.RESET}")
+                        self.results.append((packet.identifier,True, None, interfaccia_di_ingresso.name, "Unicast limitato"))
+                        return
+                else:
+                    print(f"{self.GREEN}Il pacchetto è di unicast limitato. Dovrebbe venire inoltrato direttamente sull'intrefaccia di provenienza ma TTL = 0{self.RESET}")
+                    self.results.append((packet.identifier,False, None, None, "Pacchetto scartato"))
+                    return
         print(f"{self.RED}Il pacchetto non è di unicast limitato, perchè il NET ID è diverso da 0{self.RESET}")
 
         # Controlla per l'inoltro diretto
         print("Analizziamo le varie interfaccie per l'inoltro diretto:")
         for iface in self.interfaces:
-                                   
+                                
             if IP_functions.apply_netmask(dest_ip, iface.netmask) == iface.network:
                 print(f"{self.GREEN} *  {iface.name} Netmask /{IP_functions.prefix_length(iface.netmask)}{self.RESET}")
                 print(f"{self.GREEN}    IP di destinazione è: {IP_functions.int_to_ip(dest_ip)} e effettuando un AND con una netmask /{IP_functions.prefix_length(iface.netmask)} otteniamo = {IP_functions.int_to_ip(IP_functions.apply_netmask(dest_ip, iface.netmask))}{self.RESET}")
@@ -245,9 +253,10 @@ class Router:
                             self.results.append((packet.identifier,False, None, None, "Broadcast diretto, Passato a livello superiore"))
                             return
                         else:
-                            print(f"Pacchetto inviato in broadcast diretto su {iface.name}")   
-                            is_direct_broadcast = False
-        print(f"{self.RED}Il pacchetto non è di broadcast diretto su nessuna interfaccia{self.RESET}")
+                            print(f"Pacchetto {packet.identifier} destinato a broadcast diretto su {iface.name}")   
+                            is_direct_broadcast = True
+        if is_direct_broadcast == False:
+            print(f"{self.RED}Il pacchetto non è di broadcast diretto su nessuna interfaccia{self.RESET}")
 
         # Controlla per l'inoltro indiretto      
         if(is_direct_forwarding == False and is_direct_broadcast == False):

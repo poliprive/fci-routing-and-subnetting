@@ -20,20 +20,23 @@
 # ROUTER DEI P2P DIRETTAMENTE NELLE SUBNET, LEGGERE BENE IL TESTO
 # ==============================================================================
 
-ip_rete_base: str = "29.88.192.0"
-netmask_cidr: int = 22
+ip_rete_base: str = "10.87.208.0"
+netmask_cidr: int = 21
 # es. di netmask: 24 sarebbe netmask /24 ossia 255.255.255.0
 
 # formato: nome_sottorete,numero_host
 # esempio: net-A,500
 subnets: str = """
-netA,250
-netB,204
-netC,102
-netD,61
-netE,51
-netF,51
-netG,41
+netA,700
+netB,500
+netC,100
+netD,60
+netE,60
+netF,40
+netG,25
+netH,20
+netI,10
+netL,10
 """
 
 # formato: nome_connessione_ptp
@@ -42,6 +45,8 @@ connessioni_punto_punto: str = """
 pp1
 pp2
 pp3
+pp4
+pp5
 """
 
 
