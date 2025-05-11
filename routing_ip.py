@@ -254,6 +254,8 @@ class Router:
                             return
                         else:
                             print(f"Pacchetto {packet.identifier} destinato a broadcast diretto su {iface.name}")   
+                            # (identifier del pacchetto, flag dell'intoltro diretto, riga dell'inoltro indiretto, interfaccia di uscita, commento)
+                            # qui no?
                             is_direct_broadcast = True
         if is_direct_broadcast == False:
             print(f"{self.RED}Il pacchetto non è di broadcast diretto su nessuna interfaccia{self.RESET}")
@@ -308,7 +310,10 @@ class Router:
             print(f"{self.GREEN}Pacchetto {packet.identifier} ha DF disattivato o dimensione {packet.length} < {best_route.interface.mtu}B ({best_route.interface.name} MTU) quindi si procede per inoltro indiretto{self.RESET}")
             print(f"{self.GREEN}Pacchetto {packet.identifier} Inoltro indiretto riga {best_route.identifier} \nVerso l'indirizzo {IP_functions.int_to_ip(best_route.next_hop)} attraverso l'interfaccia {best_route.interface.name}{self.RESET}")        
         
-        self.results.append((packet.identifier,is_direct_forwarding, current_indirect_forwarding_raw, current_output_interface.name, ""))
+        if is_direct_broadcast:
+            self.results.append((packet.identifier,is_direct_forwarding, current_indirect_forwarding_raw, current_output_interface.name, "Broadcast Diretto"))
+        else:
+            self.results.append((packet.identifier,is_direct_forwarding, current_indirect_forwarding_raw, current_output_interface.name, ""))
         
     def print_routed_packets(self):
 
