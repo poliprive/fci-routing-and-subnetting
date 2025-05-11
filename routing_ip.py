@@ -4,7 +4,15 @@
 #   ██╔══██╗██╔══╝  ██╔══██╗   ██║   ██╔══██║  ╚██╔╝  ██║   ██║██║   ██║██╔══██╗██╔══╝  
 #   ██████╔╝███████╗██║  ██║   ██║   ██║  ██║   ██║   ╚██████╔╝╚██████╔╝██████╔╝███████╗
 #   ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝   ╚═╝    ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝
-  
+# + CSV patch by SolarCTP
+ 
+try:
+    import dati
+except ImportError:
+    print("Manca il file dati.py. Assicurati che sia nella stessa cartella di questo script")
+    exit(1)
+
+from _csv import parse as csv_parse
 
 #Classe di funzioni utile alla manipolazione degli indirizzi IP
 class IP_functions:
@@ -418,30 +426,18 @@ pacchetti : list[Packet]= []
 # Inserimento Dati
 # ------------------------
 
-# Inserire i dati delle interfacce (nome, indirizzo ip, netmask, MTU)
-router.add_interface("eth0", "131.175.84.3", "255.255.254.0", 1500)
-router.add_interface("eth1", "131.175.86.254", "255.255.255.128", 870)
+for line in csv_parse(dati.interfaces):
+    router.add_interface(line[0], line[1], line[2], int(line[3]))
 
-# Inserire i dati delle rotte nelle tabelle di routing (indirizzo di rete, netmask, next hop)
-router.add_route("121.30.167.212", "255.255.255.252", "131.175.86.171")
-router.add_route("121.30.167.208", "255.255.255.240", "131.175.86.253")
-router.add_route("121.30.167.0", "255.255.255.0", "131.175.84.1")
-router.add_route("121.30.164.0", "255.255.252.0", "131.175.86.172")
-router.add_route("15.192.0.0", "255.192.0.0", "131.175.84.1")
-router.add_route("0.0.0.0", "0.0.0.0", "131.175.85.254")
+for line in csv_parse(dati.routing_table):
+    router.add_route(*line)
 
-# Inserire i dati delle rotte nelle tabelle di routing (indirizzo ip di destinaizone, lunghezza in Byte, dont fragment flag, TimeToLeave, interfaccia di ingresso se specificata)
-# dont_fragment, TTL e input_interface sono parametri facoltativi
-add_packet(router, pacchetti, "15.255.255.255", length=56, dont_fragment=True, TTL=21, input_interface = "eth1")
-add_packet(router, pacchetti, "121.30.167.200", length=1000, dont_fragment=True, TTL=2, input_interface = "eth0")
-add_packet(router, pacchetti, "15.146.0.17", length=160, dont_fragment=True, TTL=6, input_interface = "eth1")
-add_packet(router, pacchetti, "131.175.85.2", length=870, dont_fragment=False, TTL=1, input_interface = "eth1")
-add_packet(router, pacchetti, "121.30.133.45", length=810, dont_fragment=False, TTL=12, input_interface = "eth1")
-add_packet(router, pacchetti, "131.175.86.160", length=970, dont_fragment=True, TTL=5, input_interface = "eth0")
-add_packet(router, pacchetti, "0.0.0.3", length=970, dont_fragment=True, TTL=5, input_interface = "eth0")
-add_packet(router, pacchetti, "0.0.0.0", length=970, dont_fragment=True, TTL=5, input_interface = "eth0")
-add_packet(router, pacchetti, "131.175.84.3", length=970, dont_fragment=True, TTL=5, input_interface = "eth1")
-
+for line in csv_parse(dati.pacchetti):
+    add_packet(router, pacchetti, line[0], int(line[1]),
+               bool(int(line[2])) if len(line) >= 3 else False,
+               int(line[3]) if len(line) >= 4 else 9999,
+               line[4] if len(line) >= 5 else None,
+    )
 
 print_interface_table(router)
 print_rounting_table(router)

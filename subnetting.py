@@ -4,7 +4,15 @@
 #   ██╔══██╗██╔══╝  ██╔══██╗   ██║   ██╔══██║  ╚██╔╝  ██║   ██║██║   ██║██╔══██╗██╔══╝  
 #   ██████╔╝███████╗██║  ██║   ██║   ██║  ██║   ██║   ╚██████╔╝╚██████╔╝██████╔╝███████╗
 #   ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝   ╚═╝    ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝
+# + CSV patch by SolarCTP
+ 
+try:
+    import dati
+except ImportError:
+    print("Manca il file dati.py. Assicurati che sia nella stessa cartella di questo script")
+    exit(1)
 
+from _csv import parse as csv_parse
 
 #Classe di funzioni utile alla manipolazione degli indirizzi IP
 class IP_functions:
@@ -300,8 +308,8 @@ def print_result(node, prefix="", is_last=True, is_root=True):
 # Inserimento Dati
 # ------------------------
 
-rete_base : str  = "195.123.224.0"
-prefisso : int = 21 #Tipo di netmask per esempio /24
+rete_base : str  = dati.ip_rete_base
+prefisso : int = dati.netmask_cidr
 
 allocator : SubnetAllocator = SubnetAllocator(rete_base, prefisso)
 
@@ -310,21 +318,11 @@ allocator : SubnetAllocator = SubnetAllocator(rete_base, prefisso)
 
 ### ATTENZIONE IN ALCUNI ESERCIZI SI POTREBBERO INCLUDERE LE INTERFACCE DEI ROUTER DEI P2P DIRETTAMENTE NELLE SUBNET, LEGGERE BENE IL TESTO
 
-allocator.add_subnet("Subnet_A", 500)
-allocator.add_subnet("Subnet_B", 210)
-allocator.add_subnet("Subnet_C", 30)
-allocator.add_subnet("Subnet_D", 30)
-allocator.add_subnet("Subnet_E", 30)
-allocator.add_subnet("Subnet_F", 2)
-allocator.add_subnet("Subnet_G", 2)
-allocator.add_subnet("Subnet_H", 2)
-allocator.add_subnet("Subnet_I", 2)
+for line in csv_parse(dati.subnets):
+    allocator.add_subnet(line[0], int(line[1]))
 
-
-allocator.add_p2p_link("PP1")
-allocator.add_p2p_link("PP2")
-allocator.add_p2p_link("PP3")
-allocator.add_p2p_link("PP4")
+for line in csv_parse(dati.connessioni_punto_punto):
+    allocator.add_p2p_link(line[0])
 
 
 #Creo la lista complessiva delle subnt richieste, nota bene posso farlo solo dopo aver inserito i dati
