@@ -12,7 +12,7 @@ except ImportError:
     print("Manca il file dati.py. Assicurati che sia nella stessa cartella di questo script")
     exit(1)
 
-from _csv import parse as csv_parse
+from my_csv import parse as csv_parse
 
 #Classe di funzioni utile alla manipolazione degli indirizzi IP
 class IP_functions:
